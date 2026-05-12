@@ -1,0 +1,519 @@
+/* ===============================
+   DASHBOARD STYLES
+   =============================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #2d5016 0%, #4a7c23 100%);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* ===============================
+   HEADER SECTION
+   =============================== */
+.header {
+    color: white;
+    margin-bottom: 30px;
+    background: rgba(0,0,0,0.2);
+    padding: 30px;
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.header-left {
+    flex: 1;
+}
+
+.header h1 {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.header p {
+    font-size: 1.1em;
+    opacity: 0.9;
+}
+
+.header-right {
+    text-align: right;
+}
+
+.logout-btn {
+    padding: 12px 24px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1em;
+    transition: all 0.3s;
+}
+
+.logout-btn:hover {
+    background: #c82333;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+}
+
+.user-info {
+    margin-top: 12px;
+    font-size: 0.9em;
+    background: rgba(255,255,255,0.1);
+    padding: 10px 15px;
+    border-radius: 8px;
+}
+
+.user-role {
+    font-weight: bold;
+    color: #ffc107;
+}
+
+/* ===============================
+   DASHBOARD GRID
+   =============================== */
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+/* ===============================
+   CARD STYLES
+   =============================== */
+.card {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.card h2 {
+    color: #2d5016;
+    margin-bottom: 20px;
+    font-size: 1.4em;
+    border-bottom: 3px solid #4a7c23;
+    padding-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* ===============================
+   STATUS BOX
+   =============================== */
+.status-box {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 15px 0;
+    border-left: 5px solid #4a7c23;
+}
+
+.status-header {
+    color: #6c757d;
+    font-size: 0.9em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+
+.status-value {
+    font-size: 2.5em;
+    font-weight: bold;
+    color: #2d5016;
+}
+
+.status-value.on {
+    color: #28a745;
+}
+
+.status-value.off {
+    color: #dc3545;
+}
+
+/* ===============================
+   STATUS INDICATOR
+   =============================== */
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    font-weight: 600;
+    margin-top: 10px;
+}
+
+.status-indicator.online {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-indicator.offline {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status-indicator.info {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+.status-dot.online {
+    background: #28a745;
+}
+
+.status-dot.offline {
+    background: #dc3545;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.1); }
+}
+
+/* ===============================
+   SENSOR GRID (3 SENSORS)
+   =============================== */
+.sensor-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.sensor-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    border: 2px solid #dee2e6;
+    transition: all 0.3s;
+}
+
+.sensor-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.sensor-label {
+    font-size: 0.85em;
+    color: #6c757d;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.sensor-value {
+    font-size: 2em;
+    font-weight: bold;
+    color: #4a7c23;
+}
+
+/* ===============================
+   CURRENT VALUE DISPLAY
+   =============================== */
+.current-value {
+    font-size: 4em;
+    font-weight: bold;
+    color: #4a7c23;
+    text-align: center;
+    margin: 30px 0;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+.value-label {
+    text-align: center;
+    color: #666;
+    font-size: 1.1em;
+    font-weight: 500;
+}
+
+/* ===============================
+   ALERT MESSAGES
+   =============================== */
+.alert {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 20px;
+    border-radius: 10px;
+    margin: 15px 0;
+    font-weight: 500;
+}
+
+.alert span:first-child {
+    font-size: 1.5em;
+}
+
+.alert.success {
+    background: #d4edda;
+    color: #155724;
+    border-left: 5px solid #28a745;
+}
+
+.alert.warning {
+    background: #fff3cd;
+    color: #856404;
+    border-left: 5px solid #ffc107;
+}
+
+.alert.danger {
+    background: #f8d7da;
+    color: #721c24;
+    border-left: 5px solid #dc3545;
+}
+
+.alert.info {
+    background: #d1ecf1;
+    color: #0c5460;
+    border-left: 5px solid #17a2b8;
+}
+
+/* ===============================
+   CONTROL BUTTONS
+   =============================== */
+.control-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.control-btn {
+    padding: 15px 25px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.control-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.control-btn.active {
+    box-shadow: 0 0 0 3px rgba(74, 124, 35, 0.3);
+}
+
+.btn-on {
+    background: #28a745;
+    color: white;
+}
+
+.btn-on:hover {
+    background: #218838;
+}
+
+.btn-off {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-off:hover {
+    background: #c82333;
+}
+
+.btn-auto {
+    background: #17a2b8;
+    color: white;
+}
+
+.btn-auto:hover {
+    background: #138496;
+}
+
+.btn-manual {
+    background: #ffc107;
+    color: #212529;
+}
+
+.btn-manual:hover {
+    background: #e0a800;
+}
+
+/* ===============================
+   TABLE STYLES
+   =============================== */
+.table-container {
+    overflow-x: auto;
+    margin-top: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+th {
+    background: #4a7c23;
+    color: white;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+td {
+    padding: 12px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+tr:hover {
+    background: #f8f9fa;
+}
+
+/* ===============================
+   CHART CONTAINER
+   =============================== */
+.chart-container {
+    position: relative;
+    height: 300px;
+    margin: 20px 0;
+}
+
+.time-selector {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.time-btn {
+    padding: 8px 16px;
+    border: 2px solid #4a7c23;
+    background: white;
+    color: #4a7c23;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.time-btn:hover {
+    background: #f8f9fa;
+}
+
+.time-btn.active {
+    background: #4a7c23;
+    color: white;
+}
+
+/* ===============================
+   EXPORT BUTTON
+   =============================== */
+.export-btn {
+    padding: 12px 24px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1em;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.export-btn:hover {
+    background: #218838;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+/* ===============================
+   RESPONSIVE DESIGN
+   =============================== */
+@media (max-width: 768px) {
+    .header h1 {
+        font-size: 1.8em;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .header-right {
+        text-align: center;
+    }
+    
+    .sensor-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .control-buttons {
+        grid-template-columns: 1fr;
+    }
+    
+    .current-value {
+        font-size: 3em;
+    }
+    
+    .dashboard {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+    
+    .header {
+        padding: 20px;
+    }
+    
+    .card {
+        padding: 20px;
+    }
+    
+    .current-value {
+        font-size: 2.5em;
+    }
+}

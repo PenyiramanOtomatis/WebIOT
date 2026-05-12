@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Monitoring Kelembaban Tanah</title>
+    <link rel="stylesheet" href="css/auth-styles.css">
+</head>
+<body>
+    <div class="auth-container">
+        <!-- Header -->
+        <div class="auth-header">
+            <h1>🌱 Login</h1>
+            <p>Sistem Monitoring Kelembaban Tanah</p>
+            <p class="subtitle">Desa Purworejo - Ngantang</p>
+        </div>
+
+        <!-- Error/Success Message -->
+        <div id="errorMessage" class="message error-message"></div>
+        <div id="successMessage" class="message success-message"></div>
+
+        <!-- Login Form -->
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">📧 Email</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    required 
+                    placeholder="Masukkan email Anda" 
+                    autocomplete="email"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="password">🔒 Password</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    required 
+                    placeholder="Masukkan password" 
+                    autocomplete="current-password"
+                >
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="loginBtn">
+                🚀 Login
+            </button>
+        </form>
+
+        <!-- Register Link -->
+        <div class="auth-link">
+            Belum punya akun? <a href="register.html">Daftar di sini</a>
+        </div>
+    </div>
+
+    <script type="module">
+        import { login } from './js/auth.js';
+
+        // Get DOM elements
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+
+        // Handle form submission
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Get form values
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+
+            // Validate input
+            if (!email || !password) {
+                showError('Email dan password harus diisi');
+                return;
+            }
+
+            // Disable button and show loading
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<span class="spinner"></span> Loading...';
+            hideMessages();
+
+            // Attempt login
+            const result = await login(email, password);
+
+            if (result.success) {
+                showSuccess('✅ Login berhasil! Mengalihkan...');
+                loginBtn.innerHTML = '✅ Berhasil!';
+                
+                // Redirect to dashboard
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+            } else {
+                showError(result.error);
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '🚀 Login';
+            }
+        });
+
+        // Helper functions
+        function showError(message) {
+            errorMessage.textContent = '❌ ' + message;
+            errorMessage.style.display = 'block';
+            successMessage.style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            errorMessage.style.display = 'none';
+        }
+
+        function hideMessages() {
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+        }
+
+        // Auto-hide messages on input
+        emailInput.addEventListener('input', hideMessages);
+        passwordInput.addEventListener('input', hideMessages);
+
+        // Check if already logged in
+        const userId = sessionStorage.getItem('userId');
+        if (userId) {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

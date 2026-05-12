@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Akun - Monitoring Kelembaban Tanah</title>
+    <link rel="stylesheet" href="css/auth-styles.css">
+</head>
+<body>
+    <div class="auth-container">
+        <!-- Header -->
+        <div class="auth-header">
+            <h1>📝 Daftar Akun Baru</h1>
+            <p>Sistem Monitoring Kelembaban Tanah</p>
+            <p class="subtitle">Desa Purworejo - Ngantang</p>
+        </div>
+
+        <!-- Error/Success Message -->
+        <div id="errorMessage" class="message error-message"></div>
+        <div id="successMessage" class="message success-message"></div>
+
+        <!-- Register Form -->
+        <form id="registerForm">
+            <div class="form-group">
+                <label for="name">👤 Nama Lengkap</label>
+                <input 
+                    type="text" 
+                    id="name" 
+                    required 
+                    placeholder="Masukkan nama lengkap" 
+                    autocomplete="name"
+                    minlength="3"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="email">📧 Email</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    required 
+                    placeholder="Masukkan email Anda" 
+                    autocomplete="email"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="password">🔒 Password</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    required 
+                    placeholder="Minimal 6 karakter" 
+                    autocomplete="new-password"
+                    minlength="6"
+                >
+                <div id="passwordStrength" class="password-strength"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">🔒 Konfirmasi Password</label>
+                <input 
+                    type="password" 
+                    id="confirmPassword" 
+                    required 
+                    placeholder="Masukkan ulang password" 
+                    autocomplete="new-password"
+                    minlength="6"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="role">👥 Tipe Akun</label>
+                <select id="role" required>
+                    <option value="">-- Pilih Tipe Akun --</option>
+                    <option value="user">User (Pengguna Biasa)</option>
+                    <option value="admin">Admin (Administrator)</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="registerBtn">
+                ✨ Daftar Sekarang
+            </button>
+        </form>
+
+        <!-- Login Link -->
+        <div class="auth-link">
+            Sudah punya akun? <a href="login.html">Login di sini</a>
+        </div>
+    </div>
+
+    <script type="module">
+        import { register } from './js/auth.js';
+
+        // Get DOM elements
+        const registerForm = document.getElementById('registerForm');
+        const registerBtn = document.getElementById('registerBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const nameInput = document.getElementById('name');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        const roleSelect = document.getElementById('role');
+        const passwordStrength = document.getElementById('passwordStrength');
+
+        // Password strength indicator
+        passwordInput.addEventListener('input', () => {
+            const password = passwordInput.value;
+            const strength = checkPasswordStrength(password);
+            
+            passwordStrength.className = 'password-strength';
+            if (password.length > 0) {
+                passwordStrength.classList.add(strength);
+            }
+        });
+
+        function checkPasswordStrength(password) {
+            if (password.length < 6) return 'weak';
+            if (password.length < 10) return 'medium';
+            return 'strong';
+        }
+
+        // Handle form submission
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Get form values
+            const name = nameInput.value.trim();
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+            const role = roleSelect.value;
+
+            // Validate input
+            if (!name || name.length < 3) {
+                showError('Nama harus minimal 3 karakter');
+                return;
+            }
+
+            if (!email || !email.includes('@')) {
+                showError('Format email tidak valid');
+                return;
+            }
+
+            if (!password || password.length < 6) {
+                showError('Password harus minimal 6 karakter');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showError('Password dan konfirmasi password tidak cocok');
+                return;
+            }
+
+            if (!role) {
+                showError('Silakan pilih tipe akun');
+                return;
+            }
+
+            // Disable button and show loading
+            registerBtn.disabled = true;
+            registerBtn.innerHTML = '<span class="spinner"></span> Mendaftar...';
+            hideMessages();
+
+            // Attempt registration
+            const result = await register(name, email, password, role);
+
+            if (result.success) {
+                showSuccess('✅ Pendaftaran berhasil! Mengalihkan ke dashboard...');
+                registerBtn.innerHTML = '✅ Berhasil!';
+                
+                // Clear form
+                registerForm.reset();
+                passwordStrength.className = 'password-strength';
+                
+                // Redirect to dashboard
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1500);
+            } else {
+                showError(result.error);
+                registerBtn.disabled = false;
+                registerBtn.innerHTML = '✨ Daftar Sekarang';
+            }
+        });
+
+        // Helper functions
+        function showError(message) {
+            errorMessage.textContent = '❌ ' + message;
+            errorMessage.style.display = 'block';
+            successMessage.style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            errorMessage.style.display = 'none';
+        }
+
+        function hideMessages() {
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+        }
+
+        // Auto-hide messages on input
+        nameInput.addEventListener('input', hideMessages);
+        emailInput.addEventListener('input', hideMessages);
+        passwordInput.addEventListener('input', hideMessages);
+        confirmPasswordInput.addEventListener('input', hideMessages);
+        roleSelect.addEventListener('change', hideMessages);
+
+        // Check if already logged in
+        const userId = sessionStorage.getItem('userId');
+        if (userId) {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

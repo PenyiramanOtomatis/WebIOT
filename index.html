@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Monitoring Kelembaban Tanah</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/dashboard-styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- ===============================
+             HEADER SECTION
+             =============================== -->
+        <header class="header">
+            <div class="header-content">
+                <div class="header-left">
+                    <h1>🌱 Monitoring Kelembaban Tanah</h1>
+                    <p>Sistem Monitoring dan Kontrol Irigasi Bawang Merah</p>
+                    <p style="font-size: 0.9em; opacity: 0.8; margin-top: 5px;">📍 Desa Purworejo - Ngantang, Malang</p>
+                </div>
+                <div class="header-right">
+                    <button class="logout-btn" onclick="handleLogout()">
+                        🚪 Logout
+                    </button>
+                    <div class="user-info">
+                        <div>👤 <span id="userEmail">Loading...</span></div>
+                        <div>🎭 Role: <span class="user-role" id="userRole">Loading...</span></div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- ===============================
+             DASHBOARD GRID
+             =============================== -->
+        <div class="dashboard">
+            
+            <!-- ===============================
+                 CARD: DATA SENSOR (3 SENSORS)
+                 =============================== -->
+            <div class="card" id="sensorCard">
+                <h2>📊 Data Sensor Real-time</h2>
+                
+                <!-- 3 Sensor Grid -->
+                <div class="sensor-grid">
+                    <div class="sensor-card">
+                        <div class="sensor-label">🌡️ Sensor 1</div>
+                        <div class="sensor-value" id="sensor1Value">0%</div>
+                    </div>
+                    <div class="sensor-card">
+                        <div class="sensor-label">🌡️ Sensor 2</div>
+                        <div class="sensor-value" id="sensor2Value">0%</div>
+                    </div>
+                    <div class="sensor-card">
+                        <div class="sensor-label">🌡️ Sensor 3</div>
+                        <div class="sensor-value" id="sensor3Value">0%</div>
+                    </div>
+                </div>
+
+                <!-- Average Display -->
+                <div class="current-value" id="averageValue">0%</div>
+                <div class="value-label">Kelembaban Rata-rata</div>
+
+                <!-- Moisture Alert -->
+                <div id="moistureAlert" class="alert info">
+                    <span>ℹ️</span>
+                    <span>Menunggu data sensor...</span>
+                </div>
+            </div>
+
+            <!-- ===============================
+                 CARD: STATUS POMPA
+                 =============================== -->
+            <div class="card" id="statusPompaCard">
+                <h2>💧 Status Pompa</h2>
+                <div class="status-box">
+                    <div class="status-header">Status Pompa</div>
+                    <div class="status-value off" id="pumpStatusDisplay">OFF</div>
+                    <div class="status-indicator offline" id="pumpIndicator">
+                        <div class="status-dot offline"></div>
+                        <span>Pompa Mati</span>
+                    </div>
+                </div>
+                
+                <!-- Mode Aktif Display (View Only) -->
+                <div class="status-box" style="margin-top: 15px;">
+                    <div class="status-header">Mode Aktif</div>
+                    <div class="status-value" id="modeDisplayReadOnly">Otomatis</div>
+                    <div class="status-indicator online" id="modeIndicatorReadOnly">
+                        <div class="status-dot online"></div>
+                        <span>Mode Otomatis Aktif</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===============================
+                 CARD: KONTROL MODE
+                 =============================== -->
+            <div class="card" id="modeControlCard">
+                <h2>⚙️ Kontrol Mode</h2>
+                <div class="status-box">
+                    <div class="status-header">Mode Aktif</div>
+                    <div class="status-value" id="modeDisplay">Otomatis</div>
+                    <div class="status-indicator online" id="modeIndicator">
+                        <div class="status-dot online"></div>
+                        <span>Mode Otomatis Aktif</span>
+                    </div>
+                </div>
+
+                <!-- Mode Description -->
+                <div id="modeDescription" class="alert success">
+                    <span>⚡</span>
+                    <span><strong>Mode Otomatis:</strong> Sistem menyiram otomatis berdasarkan sensor</span>
+                </div>
+
+                <!-- Mode Buttons -->
+                <div class="control-buttons">
+                    <button class="control-btn btn-auto active" id="autoModeBtn" onclick="setMode('otomatis')">
+                        ⚡ Mode Otomatis
+                    </button>
+                    <button class="control-btn btn-manual" id="manualModeBtn" onclick="setMode('manual')">
+                        🎮 Mode Manual
+                    </button>
+                </div>
+
+                <!-- Manual Control Panel -->
+                <div id="manualControlPanel" style="display: none; margin-top: 20px;">
+                    <div class="alert warning">
+                        <span>⚠️</span>
+                        <span>Kontrol pompa secara manual</span>
+                    </div>
+                    <div class="control-buttons">
+                        <button class="control-btn btn-on" onclick="controlPump('ON')">
+                            ✅ Nyalakan Pompa
+                        </button>
+                        <button class="control-btn btn-off" onclick="controlPump('OFF')">
+                            ❌ Matikan Pompa
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ===============================
+             CARD: GRAFIK KELEMBABAN
+             =============================== -->
+        <div class="card">
+            <h2>📈 Grafik Kelembaban Tanah</h2>
+            
+            <!-- Time Range Selector -->
+            <div class="time-selector">
+                <button class="time-btn active" onclick="changeTimeRange('minute')">Per Menit</button>
+                <button class="time-btn" onclick="changeTimeRange('hour')">Per Jam</button>
+                <button class="time-btn" onclick="changeTimeRange('day')">Per Hari</button>
+                <button class="time-btn" onclick="changeTimeRange('week')">Per Minggu</button>
+            </div>
+
+            <div class="alert info" style="margin-bottom: 15px;">
+                <span>📊</span>
+                <span id="chartInfoText">Menampilkan data per menit (1 jam terakhir)</span>
+            </div>
+
+            <!-- Chart Container -->
+            <div class="chart-container">
+                <canvas id="moistureChart"></canvas>
+            </div>
+        </div>
+
+        <!-- ===============================
+             CARD: TABEL RIWAYAT DATA
+             =============================== -->
+        <div class="card">
+            <h2>📋 Riwayat Data</h2>
+            
+            <button class="export-btn" onclick="exportToExcel()">
+                📥 Export ke Excel
+            </button>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Waktu</th>
+                            <th>Sensor 1</th>
+                            <th>Sensor 2</th>
+                            <th>Sensor 3</th>
+                            <th>Rata-rata</th>
+                            <th>Pompa</th>
+                            <th>Mode</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 20px; color: #6c757d;">
+                                Memuat data...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Load App Script -->
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
