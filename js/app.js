@@ -1,5 +1,5 @@
 // ===============================
-// MONITORING DASHBOARD — TEST MODE (1 SENSOR)
+// MONITORING DASHBOARD — 3 SENSOR
 // ===============================
 
 import { checkAuth, logout, getUserEmail, getUserName, getUserRole } from './auth.js';
@@ -50,34 +50,13 @@ function initializeDashboard(userData) {
     if (modeControlCard) modeControlCard.style.display = 'none';
   }
 
-  // Sembunyikan sensor 2 & 3 di UI — hanya 1 sensor aktif
-  hideSensor2And3();
-
   initializeChart();
   startRealtimeListeners();
 
   console.log('✅ Dashboard TEST aktif | Role:', userRole);
 }
 
-// ===============================
-// SEMBUNYIKAN SENSOR 2 & 3
-// ===============================
-function hideSensor2And3() {
-  // Sembunyikan card sensor 2 dan 3, ganti label sensor 1
-  const s2Card = document.querySelector('#sensor2Value')?.closest('.sensor-card');
-  const s3Card = document.querySelector('#sensor3Value')?.closest('.sensor-card');
 
-  if (s2Card) s2Card.style.display = 'none';
-  if (s3Card) s3Card.style.display = 'none';
-
-  // Ganti label sensor 1 → "Sensor Aktif (Pin 4)"
-  const s1Label = document.querySelector('#sensor1Value')?.closest('.sensor-card')?.querySelector('.sensor-label');
-  if (s1Label) s1Label.textContent = '🌡️ Sensor Aktif (Pin 4)';
-
-  // Ganti label rata-rata
-  const avgLabel = document.querySelector('.value-label');
-  if (avgLabel) avgLabel.textContent = 'Kelembaban Terbaca';
-}
 
 // ===============================
 // DISPLAY USER INFO
@@ -109,24 +88,25 @@ function startRealtimeListeners() {
       return;
     }
 
-    // Hanya pakai nilai sensor3 (Pin 4) sebagai nilai utama
-    // Tapi karena ESP32 menyamakan sensor1=sensor2=sensor3=moisture,
-    // kita cukup pakai average
-    const moisture = parseFloat(data.average || 0);
+    // Baca nilai masing-masing sensor
+    const sensor1 = parseFloat(data.sensor1 ?? data.average ?? 0);
+    const sensor2 = parseFloat(data.sensor2 ?? data.average ?? 0);
+    const sensor3 = parseFloat(data.sensor3 ?? data.average ?? 0);
+    const moisture = parseFloat(data.average ?? ((sensor1 + sensor2 + sensor3) / 3));
 
-    // Tampilkan hanya sensor 1 (yang aktif) dan average
-    document.getElementById('sensor1Value').textContent = moisture.toFixed(2) + '%';
-    document.getElementById('sensor2Value').textContent = moisture.toFixed(2) + '%';
-    document.getElementById('sensor3Value').textContent = moisture.toFixed(2) + '%';
+    // Tampilkan ketiga sensor dan rata-rata
+    document.getElementById('sensor1Value').textContent = sensor1.toFixed(2) + '%';
+    document.getElementById('sensor2Value').textContent = sensor2.toFixed(2) + '%';
+    document.getElementById('sensor3Value').textContent = sensor3.toFixed(2) + '%';
     document.getElementById('averageValue').textContent = moisture.toFixed(2) + '%';
 
     updateMoistureAlert(moisture);
 
     moistureData.push({
       timestamp: new Date(),
-      sensor1:   moisture,
-      sensor2:   moisture,
-      sensor3:   moisture,
+      sensor1:   sensor1,
+      sensor2:   sensor2,
+      sensor3:   sensor3,
       moisture:  moisture,
       pumpStatus: pumpStatus,
       mode:      currentMode
@@ -348,13 +328,41 @@ function initializeChart() {
       labels: [],
       datasets: [
         {
-          label: 'Kelembaban (Sensor Pin 4)',
+          label: 'Sensor 1',
           data: [],
           borderColor: '#007bff',
-          backgroundColor: 'rgba(0,123,255,0.1)',
+          backgroundColor: 'rgba(0,123,255,0.05)',
           tension: 0.4,
-          pointRadius: 4,
+          pointRadius: 3,
           borderWidth: 2
+        },
+        {
+          label: 'Sensor 2',
+          data: [],
+          borderColor: '#28a745',
+          backgroundColor: 'rgba(40,167,69,0.05)',
+          tension: 0.4,
+          pointRadius: 3,
+          borderWidth: 2
+        },
+        {
+          label: 'Sensor 3',
+          data: [],
+          borderColor: '#fd7e14',
+          backgroundColor: 'rgba(253,126,20,0.05)',
+          tension: 0.4,
+          pointRadius: 3,
+          borderWidth: 2
+        },
+        {
+          label: 'Rata-rata',
+          data: [],
+          borderColor: '#6f42c1',
+          backgroundColor: 'rgba(111,66,193,0.05)',
+          tension: 0.4,
+          pointRadius: 3,
+          borderWidth: 2,
+          borderDash: [4, 2]
         },
         {
           // Garis threshold kering
@@ -400,10 +408,13 @@ function updateChart() {
   const displayData = getDataByTimeRange();
 
   chart.data.labels            = displayData.map(d => formatTime(d.timestamp));
-  chart.data.datasets[0].data  = displayData.map(d => d.moisture);
+  chart.data.datasets[0].data  = displayData.map(d => d.sensor1);
+  chart.data.datasets[1].data  = displayData.map(d => d.sensor2);
+  chart.data.datasets[2].data  = displayData.map(d => d.sensor3);
+  chart.data.datasets[3].data  = displayData.map(d => d.moisture);
 
   // Garis putus-putus threshold 40% sepanjang chart
-  chart.data.datasets[1].data  = displayData.map(() => THRESHOLD_KERING);
+  chart.data.datasets[4].data  = displayData.map(() => THRESHOLD_KERING);
 
   chart.update('none');
 }
@@ -478,16 +489,16 @@ function updateTable() {
 
     // Kolom sensor 2 & 3 ditampilkan tapi dengan keterangan
     const s1Cell = row.insertCell(1);
-    s1Cell.textContent = data.moisture.toFixed(2) + '%';
+    s1Cell.textContent = data.sensor1.toFixed(2) + '%';
     s1Cell.style.fontWeight = 'bold';
 
     const s2Cell = row.insertCell(2);
-    s2Cell.textContent = '—';
-    s2Cell.style.color = '#aaa';
+    s2Cell.textContent = data.sensor2.toFixed(2) + '%';
+    s2Cell.style.fontWeight = 'bold';
 
     const s3Cell = row.insertCell(3);
-    s3Cell.textContent = '—';
-    s3Cell.style.color = '#aaa';
+    s3Cell.textContent = data.sensor3.toFixed(2) + '%';
+    s3Cell.style.fontWeight = 'bold';
 
     row.insertCell(4).textContent = data.moisture.toFixed(2) + '%';
 
@@ -510,11 +521,14 @@ window.exportToExcel = function() {
     return;
   }
 
-  const ws_data = [['Waktu', 'Kelembaban (%)', 'Status Pompa', 'Mode']];
+  const ws_data = [['Waktu', 'Sensor 1 (%)', 'Sensor 2 (%)', 'Sensor 3 (%)', 'Rata-rata (%)', 'Status Pompa', 'Mode']];
 
   [...moistureData].reverse().slice(0, 100).forEach(d => {
     ws_data.push([
       formatDateTime(d.timestamp),
+      d.sensor1,
+      d.sensor2,
+      d.sensor3,
       d.moisture,
       d.pumpStatus,
       d.mode === 'otomatis' ? 'Otomatis' : 'Manual'
