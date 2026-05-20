@@ -22,6 +22,103 @@ let pumpStatus    = 'OFF';
 const THRESHOLD_KERING = 40;
 
 // ===============================
+// DUMMY DATA CONFIG
+// Set DUMMY_MODE = true untuk pakai data dummy (tanpa Firebase sensor)
+// ===============================
+const DUMMY_MODE = true;
+
+let dummyInterval = null;
+
+// Nilai awal tiap sensor (berbeda-beda supaya realistis)
+let dummyState = {
+  s1: 55, s2: 48, s3: 62,
+  dir1: -1, dir2: 1, dir3: -1   // arah perubahan (naik/turun)
+};
+
+// ===============================
+// GENERATE HISTORICAL DUMMY DATA (60 menit terakhir)
+// ===============================
+function generateHistoricalDummy() {
+  const now = Date.now();
+  let s1 = 55, s2 = 48, s3 = 62;
+
+  for (let i = 60; i >= 0; i--) {
+    // Simulasi perubahan realistis tiap menit
+    s1 = Math.min(95, Math.max(20, s1 + (Math.random() * 4 - 2)));
+    s2 = Math.min(95, Math.max(20, s2 + (Math.random() * 3 - 1.5)));
+    s3 = Math.min(95, Math.max(20, s3 + (Math.random() * 5 - 2.5)));
+
+    const avg = (s1 + s2 + s3) / 3;
+    const pump = avg < THRESHOLD_KERING ? 'ON' : 'OFF';
+
+    moistureData.push({
+      timestamp:  new Date(now - i * 60000),
+      sensor1:    parseFloat(s1.toFixed(2)),
+      sensor2:    parseFloat(s2.toFixed(2)),
+      sensor3:    parseFloat(s3.toFixed(2)),
+      moisture:   parseFloat(avg.toFixed(2)),
+      pumpStatus: pump,
+      mode:       'otomatis'
+    });
+  }
+
+  // Set state awal dummy live dari nilai terakhir
+  dummyState.s1 = s1; dummyState.s2 = s2; dummyState.s3 = s3;
+}
+
+// ===============================
+// TICK DUMMY DATA (dipanggil tiap 3 detik)
+// ===============================
+function tickDummyData() {
+  // Pergerakan naik/turun dengan sedikit randomness
+  const step = () => (Math.random() * 2.5 + 0.5);
+
+  dummyState.s1 += dummyState.dir1 * step();
+  dummyState.s2 += dummyState.dir2 * step();
+  dummyState.s3 += dummyState.dir3 * step();
+
+  // Balik arah kalau mentok batas
+  if (dummyState.s1 >= 85 || dummyState.s1 <= 25) dummyState.dir1 *= -1;
+  if (dummyState.s2 >= 80 || dummyState.s2 <= 30) dummyState.dir2 *= -1;
+  if (dummyState.s3 >= 90 || dummyState.s3 <= 22) dummyState.dir3 *= -1;
+
+  const s1  = parseFloat(Math.min(100, Math.max(0, dummyState.s1)).toFixed(2));
+  const s2  = parseFloat(Math.min(100, Math.max(0, dummyState.s2)).toFixed(2));
+  const s3  = parseFloat(Math.min(100, Math.max(0, dummyState.s3)).toFixed(2));
+  const avg = parseFloat(((s1 + s2 + s3) / 3).toFixed(2));
+
+  // Simulasi pompa otomatis
+  if (currentMode === 'otomatis') {
+    pumpStatus = avg < THRESHOLD_KERING ? 'ON' : 'OFF';
+  }
+
+  // Update UI sensor & rata-rata
+  document.getElementById('sensor1Value').textContent = s1 + '%';
+  document.getElementById('sensor2Value').textContent = s2 + '%';
+  document.getElementById('sensor3Value').textContent = s3 + '%';
+  document.getElementById('averageValue').textContent = avg + '%';
+
+  updateMoistureAlert(avg);
+  updatePumpDisplay();
+
+  // Simpan ke array
+  moistureData.push({
+    timestamp:  new Date(),
+    sensor1:    s1,
+    sensor2:    s2,
+    sensor3:    s3,
+    moisture:   avg,
+    pumpStatus: pumpStatus,
+    mode:       currentMode
+  });
+
+  if (moistureData.length > 500) moistureData.shift();
+
+  updateChart();
+  updateTable();
+}
+
+// ===============================
 // INITIALIZE APP
 // ===============================
 document.addEventListener('DOMContentLoaded', () => {
@@ -51,7 +148,21 @@ function initializeDashboard(userData) {
   }
 
   initializeChart();
-  startRealtimeListeners();
+
+  if (DUMMY_MODE) {
+    // Isi data historis 60 menit
+    generateHistoricalDummy();
+    updateChart();
+    updateTable();
+    // Tick baru tiap 3 detik
+    dummyInterval = setInterval(tickDummyData, 3000);
+    // Set tampilan mode & pompa awal
+    updateModeDisplay();
+    updatePumpDisplay();
+    console.log('🟡 DUMMY MODE aktif — Firebase sensor tidak dipakai');
+  } else {
+    startRealtimeListeners();
+  }
 
   console.log('✅ Dashboard TEST aktif | Role:', userRole);
 }
