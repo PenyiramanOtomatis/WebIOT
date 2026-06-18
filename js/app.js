@@ -7,7 +7,8 @@ import { rtdb } from './firebase-config.js';
 import {
   ref,
   onValue,
-  set
+  set,
+  get          // ← tambahan: untuk baca nilai satu kali
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
 // ===============================
@@ -16,7 +17,9 @@ import {
 let moistureData  = [];
 let chart         = null;
 let timeRange     = 'minute';
-let currentMode   = 'otomatis';
+
+// FIX: currentMode sinkron langsung dari Firebase, bukan dari inisialisasi lokal
+let currentMode   = null;   // null = belum diketahui (tunggu Firebase)
 let pumpStatus    = 'OFF';
 
 const THRESHOLD_KERING = 40;
@@ -89,13 +92,11 @@ function startRealtimeListeners() {
     }
 
     // Baca nilai masing-masing sensor dari ESP
-    // Catatan: ESP saat ini hanya kirim sensor3 (sensor1 & sensor2 = 0)
     const sensor1  = parseFloat(data.sensor1 ?? 0);
     const sensor2  = parseFloat(data.sensor2 ?? 0);
     const sensor3  = parseFloat(data.sensor3 ?? 0);
     const moisture = parseFloat(data.average  ?? sensor3);
 
-    // Tampilkan sensor 1 & 2 dengan keterangan N/A jika 0
     const s1El = document.getElementById('sensor1Value');
     const s2El = document.getElementById('sensor2Value');
     const s3El = document.getElementById('sensor3Value');
@@ -115,7 +116,7 @@ function startRealtimeListeners() {
       sensor3:    sensor3,
       moisture:   moisture,
       pumpStatus: pumpStatus,
-      mode:       currentMode
+      mode:       currentMode || 'otomatis'
     });
 
     if (moistureData.length > 500) moistureData.shift();
@@ -143,12 +144,14 @@ function startRealtimeListeners() {
 
   // ------------------------------------------
   // 3. LISTENER MODE (/control/mode)
+  // FIX: ini adalah satu-satunya sumber kebenaran untuk currentMode
   // ------------------------------------------
   onValue(ref(rtdb, '/control/mode'), (snapshot) => {
 
     const val = snapshot.val() || 'auto';
     // ESP pakai 'auto', web tampilkan 'otomatis'
     currentMode = (val === 'auto') ? 'otomatis' : 'manual';
+    console.log('🔄 Mode dari Firebase:', val, '→ currentMode:', currentMode);
     updateModeDisplay();
 
   }, (error) => {
@@ -205,13 +208,14 @@ function updateModeDisplay() {
   if (modeDesc) {
     if (isManual) {
       modeDesc.className = 'alert warning';
-      modeDesc.innerHTML = '<span>⚠️</span><span><strong>Mode Manual:</strong> Sensor diabaikan — kontrol pompa dari tombol</span>';
+      modeDesc.innerHTML = '<span>⚠️</span><span><strong>Mode Manual:</strong> Sensor diabaikan — kontrol pompa dari tombol di bawah</span>';
     } else {
       modeDesc.className = 'alert success';
       modeDesc.innerHTML = '<span>⚡</span><span><strong>Mode Otomatis:</strong> Relay ON jika kelembaban &lt; 40%, OFF jika ≥ 40%</span>';
     }
   }
 
+  // FIX: Panel manual muncul/hilang sesuai mode dari Firebase
   if (manualPanel) manualPanel.style.display = isManual ? 'block' : 'none';
 
   if (autoBtn)   autoBtn.classList.toggle('active', !isManual);
@@ -275,14 +279,11 @@ window.setMode = async function(mode) {
   }
 
   try {
-    // Web kirim 'otomatis' → Firebase simpan 'auto' (agar ESP32 bisa baca)
+    // Web kirim 'otomatis' → Firebase simpan 'auto' (agar ESP32 baca)
     // Web kirim 'manual'   → Firebase simpan 'manual'
     const firebaseMode = (mode === 'otomatis') ? 'auto' : 'manual';
 
     await set(ref(rtdb, '/control/mode'), firebaseMode);
-
-    // Update local currentMode langsung supaya controlPump tidak terblokir
-    currentMode = mode;  // 'otomatis' atau 'manual'
 
     // Jika beralih ke auto, reset perintah pompa ke 0 (safety)
     if (firebaseMode === 'auto') {
@@ -292,8 +293,8 @@ window.setMode = async function(mode) {
       console.log('✅ Mode → manual');
     }
 
-    // Update tampilan langsung tanpa tunggu Firebase callback
-    updateModeDisplay();
+    // CATATAN: currentMode akan diupdate otomatis oleh listener /control/mode
+    // Tidak perlu set manual di sini — listener yang jadi sumber kebenaran
 
   } catch (error) {
     console.error('setMode error:', error);
@@ -303,13 +304,9 @@ window.setMode = async function(mode) {
 
 // ===============================
 // CONTROL PUMP (dipanggil dari tombol HTML)
+// FIX: baca mode terbaru langsung dari Firebase sebelum eksekusi
 // ===============================
 window.controlPump = async function(status) {
-
-  if (currentMode !== 'manual') {
-    alert('⚠️ Ubah ke Mode Manual dulu sebelum kontrol pompa!');
-    return;
-  }
 
   if (getUserRole() !== 'admin') {
     alert('⚠️ Hanya Admin yang dapat mengontrol pompa!');
@@ -317,11 +314,31 @@ window.controlPump = async function(status) {
   }
 
   try {
+    // Baca mode TERKINI dari Firebase secara langsung (bukan dari variabel lokal)
+    const modeSnapshot = await get(ref(rtdb, '/control/mode'));
+    const modeVal = modeSnapshot.val();
+    const isManualNow = (modeVal === 'manual');
+
+    if (!isManualNow) {
+      alert('⚠️ Ubah ke Mode Manual dulu sebelum kontrol pompa!');
+      return;
+    }
+
     const pumpValue = (status === 'ON') ? 1 : 0;
 
+    // Kirim perintah ke /control/pump (dibaca ESP32)
     await set(ref(rtdb, '/control/pump'), pumpValue);
 
-    console.log(`✅ Perintah pompa dikirim: ${status} (${pumpValue})`);
+    // FIX: Tulis juga ke /pump/status dan /pump/statusStr agar display web
+    // langsung update tanpa harus menunggu ESP32 aktif mengirim data
+    await set(ref(rtdb, '/pump/status'), pumpValue);
+    await set(ref(rtdb, '/pump/statusStr'), status);
+
+    // FIX: Update display pompa langsung (optimistic update)
+    pumpStatus = status;
+    updatePumpDisplay();
+
+    console.log(`✅ Perintah pompa dikirim ke Firebase: ${status} (${pumpValue})`);
 
   } catch (error) {
     console.error('controlPump error:', error);
