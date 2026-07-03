@@ -1,5 +1,5 @@
 // ===============================
-// MONITORING DASHBOARD — 3 SENSOR
+// MONITORING DASHBOARD — 2 SENSOR
 // ===============================
 
 import { checkAuth, logout, getUserEmail, getUserName, getUserRole } from './auth.js';
@@ -103,17 +103,14 @@ function startRealtimeListeners() {
     // Baca nilai masing-masing sensor dari ESP
     const sensor1  = parseFloat(data.sensor1 ?? 0);
     const sensor2  = parseFloat(data.sensor2 ?? 0);
-    const sensor3  = parseFloat(data.sensor3 ?? 0);
-    const moisture = parseFloat(data.average  ?? sensor3);
+    const moisture = parseFloat(data.average  ?? ((sensor1 + sensor2) / 2));
 
     const s1El = document.getElementById('sensor1Value');
     const s2El = document.getElementById('sensor2Value');
-    const s3El = document.getElementById('sensor3Value');
     const avgEl = document.getElementById('averageValue');
 
     if (s1El) s1El.textContent = sensor1 === 0 ? 'N/A' : sensor1.toFixed(2) + '%';
     if (s2El) s2El.textContent = sensor2 === 0 ? 'N/A' : sensor2.toFixed(2) + '%';
-    if (s3El) s3El.textContent = sensor3 === 0 ? 'N/A' : sensor3.toFixed(2) + '%';
     if (avgEl) avgEl.textContent = moisture.toFixed(2) + '%';
 
     updateMoistureAlert(moisture);
@@ -122,7 +119,6 @@ function startRealtimeListeners() {
       timestamp:  new Date(),
       sensor1:    sensor1,
       sensor2:    sensor2,
-      sensor3:    sensor3,
       moisture:   moisture,
       pumpStatus: pumpStatus,
       mode:       currentMode || 'otomatis'
@@ -199,12 +195,10 @@ function setSensorOffline() {
 
   const s1El  = document.getElementById('sensor1Value');
   const s2El  = document.getElementById('sensor2Value');
-  const s3El  = document.getElementById('sensor3Value');
   const avgEl = document.getElementById('averageValue');
 
   if (s1El)  s1El.textContent  = 'N/A';
   if (s2El)  s2El.textContent  = 'N/A';
-  if (s3El)  s3El.textContent  = 'N/A';
   if (avgEl) avgEl.textContent = 'N/A';
 }
 
@@ -316,11 +310,9 @@ function updateMoistureAlert(moisture) {
 function setDefaultValues() {
   const el1 = document.getElementById('sensor1Value');
   const el2 = document.getElementById('sensor2Value');
-  const el3 = document.getElementById('sensor3Value');
   const elA = document.getElementById('averageValue');
   if (el1) el1.textContent = 'N/A';
   if (el2) el2.textContent = 'N/A';
-  if (el3) el3.textContent = '0%';
   if (elA) elA.textContent = '0%';
 }
 
@@ -434,15 +426,6 @@ function initializeChart() {
           borderWidth: 2
         },
         {
-          label: 'Sensor 3',
-          data: [],
-          borderColor: '#fd7e14',
-          backgroundColor: 'rgba(253,126,20,0.05)',
-          tension: 0.4,
-          pointRadius: 3,
-          borderWidth: 2
-        },
-        {
           label: 'Rata-rata',
           data: [],
           borderColor: '#6f42c1',
@@ -498,11 +481,10 @@ function updateChart() {
   chart.data.labels            = displayData.map(d => formatTime(d.timestamp));
   chart.data.datasets[0].data  = displayData.map(d => d.sensor1);
   chart.data.datasets[1].data  = displayData.map(d => d.sensor2);
-  chart.data.datasets[2].data  = displayData.map(d => d.sensor3);
-  chart.data.datasets[3].data  = displayData.map(d => d.moisture);
+  chart.data.datasets[2].data  = displayData.map(d => d.moisture);
 
   // Garis putus-putus threshold 40% sepanjang chart
-  chart.data.datasets[4].data  = displayData.map(() => THRESHOLD_KERING);
+  chart.data.datasets[3].data  = displayData.map(() => THRESHOLD_KERING);
 
   chart.update('none');
 }
@@ -564,7 +546,7 @@ function updateTable() {
   tbody.innerHTML = '';
 
   if (moistureData.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:#6c757d;">Belum ada data</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#6c757d;">Belum ada data</td></tr>';
     return;
   }
 
@@ -585,18 +567,14 @@ function updateTable() {
     s2Cell.style.fontWeight = 'bold';
     s2Cell.style.color  = data.sensor2 === 0 ? '#adb5bd' : '';
 
-    const s3Cell = row.insertCell(3);
-    s3Cell.textContent  = data.sensor3.toFixed(2) + '%';
-    s3Cell.style.fontWeight = 'bold';
+    row.insertCell(3).textContent = data.moisture.toFixed(2) + '%';
 
-    row.insertCell(4).textContent = data.moisture.toFixed(2) + '%';
-
-    const pumpCell = row.insertCell(5);
+    const pumpCell = row.insertCell(4);
     pumpCell.textContent      = data.pumpStatus;
     pumpCell.style.fontWeight = 'bold';
     pumpCell.style.color      = data.pumpStatus === 'ON' ? '#28a745' : '#dc3545';
 
-    row.insertCell(6).textContent = data.mode === 'otomatis' ? 'Otomatis' : 'Manual';
+    row.insertCell(5).textContent = data.mode === 'otomatis' ? 'Otomatis' : 'Manual';
   });
 }
 
@@ -610,14 +588,13 @@ window.exportToExcel = function() {
     return;
   }
 
-  const ws_data = [['Waktu', 'Sensor 1 (%)', 'Sensor 2 (%)', 'Sensor 3 (%)', 'Rata-rata (%)', 'Status Pompa', 'Mode']];
+  const ws_data = [['Waktu', 'Sensor 1 (%)', 'Sensor 2 (%)', 'Rata-rata (%)', 'Status Pompa', 'Mode']];
 
   [...moistureData].reverse().slice(0, 100).forEach(d => {
     ws_data.push([
       formatDateTime(d.timestamp),
       d.sensor1 === 0 ? 'N/A' : d.sensor1,
       d.sensor2 === 0 ? 'N/A' : d.sensor2,
-      d.sensor3,
       d.moisture,
       d.pumpStatus,
       d.mode === 'otomatis' ? 'Otomatis' : 'Manual'

@@ -397,16 +397,11 @@
                 <div class="sensor-bar-track"><div class="sensor-bar-fill" id="bar2"></div></div>
                 <span class="sensor-pct" id="pct2">—</span>
             </div>
-            <div class="sensor-row">
-                <span class="sensor-name">Sensor 3</span>
-                <div class="sensor-bar-track"><div class="sensor-bar-fill" id="bar3"></div></div>
-                <span class="sensor-pct" id="pct3">—</span>
-            </div>
         </div>
 
         <div class="stats">
             <div class="stat">
-                <span class="stat-value">3</span>
+                <span class="stat-value">2</span>
                 <span class="stat-label">Sensor Aktif</span>
             </div>
             <div class="stat-divider"></div>
@@ -504,14 +499,12 @@
 
             setSensor('bar1', 'pct1', d.sensor1);
             setSensor('bar2', 'pct2', d.sensor2);
-            setSensor('bar3', 'pct3', d.sensor3);
 
             const s1 = Number(d.sensor1) || 0;
             const s2 = Number(d.sensor2) || 0;
-            const s3 = Number(d.sensor3) || 0;
 
             // Sistem aktif jika minimal 1 sensor punya nilai > 0
-            const adaData = (s1 > 0 || s2 > 0 || s3 > 0);
+            const adaData = (s1 > 0 || s2 > 0);
             adaData ? setOnline() : setOffline();
         });
 
