@@ -3,218 +3,609 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daftar Akun - Monitoring Kelembaban Tanah</title>
-    <link rel="stylesheet" href="css/auth-styles.css">
+    <title>Daftar — Sistem Monitoring Kelembaban Tanah</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --soil-dark:   #1a2e0a;
+            --soil-mid:    #2d5016;
+            --leaf:        #4a7c23;
+            --leaf-light:  #6aab35;
+            --cream:       #f7f5f0;
+            --text-main:   #1a1a1a;
+            --text-muted:  #6b7280;
+            --border:      #e5e7eb;
+            --error-bg:    #fef2f2;
+            --error-text:  #991b1b;
+            --error-border:#fca5a5;
+            --success-bg:  #f0fdf4;
+            --success-text:#166534;
+            --success-border:#86efac;
+            --radius:      10px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background: var(--cream);
+        }
+
+        /* ── Left Panel ── */
+        .panel-left {
+            background: var(--soil-dark);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 52px 56px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .panel-left::before {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 220px;
+            background: linear-gradient(180deg, transparent 0%, #2d5016 60%, #1a2e0a 100%);
+            opacity: 0.6;
+        }
+
+        .panel-left::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 90px;
+            background: var(--soil-mid);
+            opacity: 0.4;
+            border-radius: 60% 60% 0 0 / 30px 30px 0 0;
+        }
+
+        .glow {
+            position: absolute;
+            width: 360px; height: 360px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(106,171,53,0.18) 0%, transparent 70%);
+            top: -80px; right: -80px;
+            pointer-events: none;
+        }
+
+        .brand { position: relative; z-index: 1; }
+
+        .brand-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(106,171,53,0.15);
+            border: 1px solid rgba(106,171,53,0.3);
+            border-radius: 99px;
+            padding: 6px 14px;
+            margin-bottom: 28px;
+        }
+
+        .brand-badge span {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--leaf-light);
+        }
+
+        .brand-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--leaf-light);
+            animation: blink 2s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%       { opacity: 0.4; transform: scale(0.8); }
+        }
+
+        .panel-left h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 2.6rem;
+            line-height: 1.2;
+            color: #fff;
+            margin-bottom: 16px;
+        }
+
+        .panel-left h1 em { font-style: normal; color: var(--leaf-light); }
+
+        .brand-desc {
+            font-size: 0.95rem;
+            color: rgba(255,255,255,0.55);
+            line-height: 1.7;
+            max-width: 340px;
+            margin-top: 16px;
+        }
+
+        /* Checklist requirements */
+        .pw-requirements {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .pw-req-title {
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.25);
+            margin-bottom: 4px;
+        }
+
+        .pw-req-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.82rem;
+            color: rgba(255,255,255,0.4);
+            transition: color 0.3s;
+        }
+
+        .pw-req-item.met { color: rgba(255,255,255,0.85); }
+
+        .pw-req-icon {
+            width: 18px; height: 18px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(255,255,255,0.2);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.3s;
+            font-size: 10px;
+        }
+
+        .pw-req-item.met .pw-req-icon {
+            background: var(--leaf-light);
+            border-color: var(--leaf-light);
+            color: #fff;
+        }
+
+        /* Stats */
+        .stats { display: flex; gap: 28px; position: relative; z-index: 1; }
+        .stat  { display: flex; flex-direction: column; gap: 4px; }
+
+        .stat-value {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.6rem;
+            color: #fff;
+        }
+
+        .stat-label {
+            font-size: 0.72rem;
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.4);
+        }
+
+        .stat-divider { width: 1px; background: rgba(255,255,255,0.12); align-self: stretch; }
+
+        /* ── Right Panel ── */
+        .panel-right {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        .register-card { width: 100%; max-width: 400px; }
+
+        .register-card-header { margin-bottom: 32px; }
+
+        .register-card-header h2 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.9rem;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+
+        .register-card-header p { font-size: 0.9rem; color: var(--text-muted); }
+
+        .form-group { margin-bottom: 16px; }
+
+        .form-group label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 7px;
+        }
+
+        .input-wrap { position: relative; }
+
+        .input-icon {
+            position: absolute;
+            left: 14px; top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            pointer-events: none;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 13px 14px 13px 42px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            background: #fff;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--leaf);
+            box-shadow: 0 0 0 3px rgba(74,124,35,0.1);
+        }
+
+        .form-group input.invalid {
+            border-color: #fca5a5;
+            box-shadow: 0 0 0 3px rgba(252,165,165,0.2);
+        }
+
+        .form-group input::placeholder { color: #c4c9d4; }
+
+        .toggle-pw {
+            position: absolute;
+            right: 14px; top: 50%;
+            transform: translateY(-50%);
+            background: none; border: none;
+            cursor: pointer; color: #9ca3af;
+            display: flex; align-items: center; padding: 2px;
+        }
+
+        .toggle-pw:hover { color: var(--leaf); }
+
+        /* Strength bar */
+        .strength-wrap { margin-top: 8px; }
+
+        .strength-track {
+            height: 3px;
+            background: var(--border);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+
+        .strength-fill {
+            height: 100%;
+            border-radius: 99px;
+            width: 0%;
+            transition: width 0.4s ease, background 0.4s ease;
+        }
+
+        .strength-label {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Messages */
+        .message {
+            display: none;
+            padding: 11px 14px;
+            border-radius: var(--radius);
+            font-size: 0.84rem;
+            margin-bottom: 16px;
+            border: 1.5px solid;
+        }
+
+        .error-message   { background: var(--error-bg);   color: var(--error-text);   border-color: var(--error-border); }
+        .success-message { background: var(--success-bg); color: var(--success-text); border-color: var(--success-border); }
+
+        .btn-register {
+            width: 100%;
+            padding: 14px;
+            background: var(--soil-mid);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 0.95rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-register:hover:not(:disabled) {
+            background: var(--leaf);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(45,80,22,0.25);
+        }
+
+        .btn-register:disabled { background: #9ca3af; cursor: not-allowed; }
+
+        .spinner {
+            width: 16px; height: 16px;
+            border: 2px solid rgba(255,255,255,0.35);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.65s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .auth-link {
+            text-align: center;
+            margin-top: 22px;
+            font-size: 0.87rem;
+            color: var(--text-muted);
+        }
+
+        .auth-link a { color: var(--leaf); font-weight: 600; text-decoration: none; }
+        .auth-link a:hover { text-decoration: underline; }
+
+        .location-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            width: 100%;
+            justify-content: center;
+        }
+
+        @media (max-width: 720px) {
+            body { grid-template-columns: 1fr; }
+            .panel-left { display: none; }
+            .panel-right { padding: 32px 24px; }
+        }
+    </style>
 </head>
 <body>
-    <div class="auth-container">
-        <!-- Header -->
-        <div class="auth-header">
-            <h1>📝 Daftar Akun Baru</h1>
-            <p>Sistem Monitoring Kelembaban Tanah</p>
-            <p class="subtitle">Desa Purworejo - Ngantang</p>
+
+    <!-- LEFT PANEL -->
+    <div class="panel-left">
+        <div class="glow"></div>
+
+        <div class="brand">
+            <h1>Bergabung<br>dengan <em>Sistem</em><br>Monitoring</h1>
+            <p class="brand-desc">Daftarkan akun Anda untuk mulai memantau kelembaban tanah dan mengelola irigasi secara otomatis.</p>
         </div>
 
-        <!-- Error/Success Message -->
-        <div id="errorMessage" class="message error-message"></div>
-        <div id="successMessage" class="message success-message"></div>
+        <!-- Password requirements shown live -->
+        <div class="pw-requirements" id="pwRequirements">
+            <p class="pw-req-title">Syarat Password</p>
+            <div class="pw-req-item" id="req-length">
+                <div class="pw-req-icon">✓</div>
+                <span>Minimal 8 karakter</span>
+            </div>
+            <div class="pw-req-item" id="req-upper">
+                <div class="pw-req-icon">✓</div>
+                <span>Mengandung huruf besar (A–Z)</span>
+            </div>
+            <div class="pw-req-item" id="req-number">
+                <div class="pw-req-icon">✓</div>
+                <span>Mengandung angka (0–9)</span>
+            </div>
+            <div class="pw-req-item" id="req-special">
+                <div class="pw-req-icon">✓</div>
+                <span>Mengandung karakter khusus (#, @, !, dll)</span>
+            </div>
+        </div>
+    </div>
 
-        <!-- Register Form -->
-        <form id="registerForm">
-            <div class="form-group">
-                <label for="name">👤 Nama Lengkap</label>
-                <input 
-                    type="text" 
-                    id="name" 
-                    required 
-                    placeholder="Masukkan nama lengkap" 
-                    autocomplete="name"
-                    minlength="3"
-                >
+    <!-- RIGHT PANEL — register form -->
+    <div class="panel-right">
+        <div class="register-card">
+            <div class="register-card-header">
+                <h2>Buat akun</h2>
+                <p>Isi data di bawah untuk mendaftar</p>
             </div>
 
-            <div class="form-group">
-                <label for="email">📧 Email</label>
-                <input 
-                    type="email" 
-                    id="email" 
-                    required 
-                    placeholder="Masukkan email Anda" 
-                    autocomplete="email"
-                >
+            <div id="errorMessage" class="message error-message"></div>
+            <div id="successMessage" class="message success-message"></div>
+
+            <form id="registerForm" novalidate>
+
+                <!-- Nama -->
+                <div class="form-group">
+                    <label for="name">Nama Lengkap</label>
+                    <div class="input-wrap">
+                        <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+                        </svg>
+                        <input type="text" id="name" required placeholder="Masukkan nama lengkap" autocomplete="name" minlength="3">
+                    </div>
+                </div>
+
+                <!-- Email -->
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <div class="input-wrap">
+                        <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                        </svg>
+                        <input type="email" id="email" required placeholder="nama@email.com" autocomplete="email">
+                    </div>
+                </div>
+
+                <!-- Password -->
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrap">
+                        <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                        <input type="password" id="password" required placeholder="Buat password kuat" autocomplete="new-password">
+                        <button type="button" class="toggle-pw" id="togglePw1" aria-label="Tampilkan password">
+                            <svg id="eye1" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="strength-wrap">
+                        <div class="strength-track"><div class="strength-fill" id="strengthFill"></div></div>
+                        <p class="strength-label" id="strengthLabel"></p>
+                    </div>
+                </div>
+
+                <!-- Konfirmasi Password -->
+                <div class="form-group">
+                    <label for="confirmPassword">Konfirmasi Password</label>
+                    <div class="input-wrap">
+                        <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                        <input type="password" id="confirmPassword" required placeholder="Ulangi password" autocomplete="new-password">
+                        <button type="button" class="toggle-pw" id="togglePw2" aria-label="Tampilkan konfirmasi password">
+                            <svg id="eye2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-register" id="registerBtn">Daftar Sekarang</button>
+            </form>
+
+            <div class="auth-link">
+                Sudah punya akun? <a href="login.html">Masuk di sini</a>
             </div>
 
-            <div class="form-group">
-                <label for="password">🔒 Password</label>
-                <input 
-                    type="password" 
-                    id="password" 
-                    required 
-                    placeholder="Minimal 6 karakter" 
-                    autocomplete="new-password"
-                    minlength="6"
-                >
-                <div id="passwordStrength" class="password-strength"></div>
+            <div class="location-tag">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/>
+                </svg>
+                Desa Purworejo, Ngantang
             </div>
-
-            <div class="form-group">
-                <label for="confirmPassword">🔒 Konfirmasi Password</label>
-                <input 
-                    type="password" 
-                    id="confirmPassword" 
-                    required 
-                    placeholder="Masukkan ulang password" 
-                    autocomplete="new-password"
-                    minlength="6"
-                >
-            </div>
-
-            <div class="form-group">
-                <label for="role">👥 Tipe Akun</label>
-                <select id="role" required>
-                    <option value="">-- Pilih Tipe Akun --</option>
-                    <option value="user">User (Pengguna Biasa)</option>
-                    <option value="admin">Admin (Administrator)</option>
-                </select>
-            </div>
-
-            <button type="submit" class="btn btn-primary" id="registerBtn">
-                ✨ Daftar Sekarang
-            </button>
-        </form>
-
-        <!-- Login Link -->
-        <div class="auth-link">
-            Sudah punya akun? <a href="login.html">Login di sini</a>
         </div>
     </div>
 
     <script type="module">
         import { register } from './js/auth.js';
+        import { rtdb } from './js/firebase-config.js';
+        import { ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // Get DOM elements
-        const registerForm = document.getElementById('registerForm');
-        const registerBtn = document.getElementById('registerBtn');
-        const errorMessage = document.getElementById('errorMessage');
-        const successMessage = document.getElementById('successMessage');
-        const nameInput = document.getElementById('name');
-        const emailInput = document.getElementById('email');
-        const passwordInput = document.getElementById('password');
-        const confirmPasswordInput = document.getElementById('confirmPassword');
-        const roleSelect = document.getElementById('role');
-        const passwordStrength = document.getElementById('passwordStrength');
-
-        // Password strength indicator
-        passwordInput.addEventListener('input', () => {
-            const password = passwordInput.value;
-            const strength = checkPasswordStrength(password);
-            
-            passwordStrength.className = 'password-strength';
-            if (password.length > 0) {
-                passwordStrength.classList.add(strength);
+        // ── Live mode dari Firebase ──
+        onValue(ref(rtdb, 'control/mode'), (snap) => {
+            const mode = snap.val();
+            const el = document.getElementById('statMode');
+            if (el && mode !== null) {
+                el.textContent = mode === 'auto' ? 'Auto' : 'Manual';
             }
         });
 
-        function checkPasswordStrength(password) {
-            if (password.length < 6) return 'weak';
-            if (password.length < 10) return 'medium';
-            return 'strong';
+        const registerForm      = document.getElementById('registerForm');
+        const registerBtn       = document.getElementById('registerBtn');
+        const errorMessage      = document.getElementById('errorMessage');
+        const successMessage    = document.getElementById('successMessage');
+        const nameInput         = document.getElementById('name');
+        const emailInput        = document.getElementById('email');
+        const passwordInput     = document.getElementById('password');
+        const confirmInput      = document.getElementById('confirmPassword');
+        const strengthFill      = document.getElementById('strengthFill');
+        const strengthLabel     = document.getElementById('strengthLabel');
+
+        // ── Password requirement checks ──
+        const rules = {
+            length:  (p) => p.length >= 8,
+            upper:   (p) => /[A-Z]/.test(p),
+            number:  (p) => /[0-9]/.test(p),
+            special: (p) => /[^A-Za-z0-9]/.test(p),
+        };
+
+        passwordInput.addEventListener('input', () => {
+            const p = passwordInput.value;
+
+            // Update requirement indicators on left panel
+            Object.keys(rules).forEach(key => {
+                const el = document.getElementById('req-' + key);
+                if (el) el.classList.toggle('met', rules[key](p));
+            });
+
+            // Strength bar
+            const metCount = Object.values(rules).filter(fn => fn(p)).length;
+            const pct = (metCount / 4) * 100;
+            const colors = ['', '#ef4444', '#f97316', '#eab308', '#22c55e'];
+            const labels = ['', 'Sangat lemah', 'Lemah', 'Cukup', 'Kuat'];
+
+            strengthFill.style.width  = pct + '%';
+            strengthFill.style.background = colors[metCount] || '';
+            strengthLabel.textContent = p.length ? labels[metCount] : '';
+            strengthLabel.style.color = colors[metCount] || '';
+        });
+
+        // ── Toggle password visibility ──
+        function makeToggle(btnId, inputEl, eyeId) {
+            document.getElementById(btnId).addEventListener('click', () => {
+                const show = inputEl.type === 'password';
+                inputEl.type = show ? 'text' : 'password';
+                document.getElementById(eyeId).innerHTML = show
+                    ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>'
+                    : '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>';
+            });
         }
 
-        // Handle form submission
+        makeToggle('togglePw1', passwordInput, 'eye1');
+        makeToggle('togglePw2', confirmInput,  'eye2');
+
+        // ── Form submit ──
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            // Get form values
-            const name = nameInput.value.trim();
-            const email = emailInput.value.trim();
+
+            const name     = nameInput.value.trim();
+            const email    = emailInput.value.trim();
             const password = passwordInput.value;
-            const confirmPassword = confirmPasswordInput.value;
-            const role = roleSelect.value;
+            const confirm  = confirmInput.value;
 
-            // Validate input
-            if (!name || name.length < 3) {
-                showError('Nama harus minimal 3 karakter');
+            if (!name || name.length < 3) { showError('Nama harus minimal 3 karakter'); return; }
+            if (!email || !email.includes('@')) { showError('Format email tidak valid'); return; }
+
+            // Check all password rules
+            const failedRules = Object.entries(rules).filter(([, fn]) => !fn(password));
+            if (failedRules.length > 0) {
+                showError('Password belum memenuhi semua syarat yang ditentukan');
                 return;
             }
 
-            if (!email || !email.includes('@')) {
-                showError('Format email tidak valid');
-                return;
-            }
+            if (password !== confirm) { showError('Password dan konfirmasi tidak cocok'); return; }
 
-            if (!password || password.length < 6) {
-                showError('Password harus minimal 6 karakter');
-                return;
-            }
-
-            if (password !== confirmPassword) {
-                showError('Password dan konfirmasi password tidak cocok');
-                return;
-            }
-
-            if (!role) {
-                showError('Silakan pilih tipe akun');
-                return;
-            }
-
-            // Disable button and show loading
             registerBtn.disabled = true;
-            registerBtn.innerHTML = '<span class="spinner"></span> Mendaftar...';
+            registerBtn.innerHTML = '<div class="spinner"></div> Mendaftarkan...';
             hideMessages();
 
-            // Attempt registration
-            const result = await register(name, email, password, role);
+            // Role default 'user' — tidak perlu dipilih pengguna
+            const result = await register(name, email, password, 'user');
 
             if (result.success) {
-                showSuccess('✅ Pendaftaran berhasil! Mengalihkan ke dashboard...');
-                registerBtn.innerHTML = '✅ Berhasil!';
-                
-                // Clear form
-                registerForm.reset();
-                passwordStrength.className = 'password-strength';
-                
-                // Redirect to dashboard
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 1500);
+                showSuccess('Pendaftaran berhasil! Mengalihkan ke dasbor...');
+                registerBtn.innerHTML = '✓ Berhasil';
+                setTimeout(() => { window.location.href = 'index.html'; }, 1500);
             } else {
                 showError(result.error);
                 registerBtn.disabled = false;
-                registerBtn.innerHTML = '✨ Daftar Sekarang';
+                registerBtn.innerHTML = 'Daftar Sekarang';
             }
         });
 
-        // Helper functions
-        function showError(message) {
-            errorMessage.textContent = '❌ ' + message;
-            errorMessage.style.display = 'block';
-            successMessage.style.display = 'none';
-        }
+        function showError(msg)   { errorMessage.textContent = msg; errorMessage.style.display = 'block'; successMessage.style.display = 'none'; }
+        function showSuccess(msg) { successMessage.textContent = msg; successMessage.style.display = 'block'; errorMessage.style.display = 'none'; }
+        function hideMessages()   { errorMessage.style.display = 'none'; successMessage.style.display = 'none'; }
 
-        function showSuccess(message) {
-            successMessage.textContent = message;
-            successMessage.style.display = 'block';
-            errorMessage.style.display = 'none';
-        }
+        [nameInput, emailInput, passwordInput, confirmInput].forEach(el => el.addEventListener('input', hideMessages));
 
-        function hideMessages() {
-            errorMessage.style.display = 'none';
-            successMessage.style.display = 'none';
-        }
-
-        // Auto-hide messages on input
-        nameInput.addEventListener('input', hideMessages);
-        emailInput.addEventListener('input', hideMessages);
-        passwordInput.addEventListener('input', hideMessages);
-        confirmPasswordInput.addEventListener('input', hideMessages);
-        roleSelect.addEventListener('change', hideMessages);
-
-        // Check if already logged in
-        const userId = sessionStorage.getItem('userId');
-        if (userId) {
-            window.location.href = 'index.html';
-        }
+        if (sessionStorage.getItem('userId')) window.location.href = 'index.html';
     </script>
 </body>
 </html>
