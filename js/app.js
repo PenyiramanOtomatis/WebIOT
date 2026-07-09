@@ -28,7 +28,7 @@ let lastUpdateReceived = null;
 let offlineCheckTimer  = null;
 const OFFLINE_TIMEOUT_MS = 300000; // 5 menit tidak update → anggap offline
 let isOnline = false; // default offline sampai ESP32 kirim data
-const THRESHOLD_KERING = 40;
+const THRESHOLD_KERING = 45;
 
 // ===============================
 // INITIALIZE APP
@@ -261,7 +261,7 @@ function updateModeDisplay() {
       modeDesc.innerHTML = '<span>⚠️</span><span><strong>Mode Manual:</strong> Sensor diabaikan — kontrol pompa dari tombol di bawah</span>';
     } else {
       modeDesc.className = 'alert success';
-      modeDesc.innerHTML = '<span>⚡</span><span><strong>Mode Otomatis:</strong> Relay ON jika kelembaban &lt; 40%, OFF jika ≥ 40%</span>';
+      modeDesc.innerHTML = '<span>⚡</span><span><strong>Mode Otomatis:</strong> Relay ON jika kelembaban &lt; 45%, OFF jika ≥ 45%</span>';
     }
   }
 
@@ -294,13 +294,13 @@ function updateMoistureAlert(moisture) {
 
   if (moisture < THRESHOLD_KERING) {
     alertDiv.className = 'alert danger';
-    alertDiv.innerHTML = '<span>🔴</span><span><strong>KERING! (&lt; 40%)</strong> — Relay aktif otomatis (Mode Auto)</span>';
+    alertDiv.innerHTML = '<span>🔴</span><span><strong>KERING! (&lt; 45%)</strong> — Relay aktif otomatis (Mode Auto)</span>';
   } else if (moisture > 70) {
     alertDiv.className = 'alert warning';
     alertDiv.innerHTML = '<span>💧</span><span><strong>Terlalu Basah! (&gt; 70%)</strong> — Relay mati otomatis</span>';
   } else {
     alertDiv.className = 'alert success';
-    alertDiv.innerHTML = '<span>🟢</span><span><strong>Lembab Normal (40–70%)</strong> — Kelembaban optimal</span>';
+    alertDiv.innerHTML = '<span>🟢</span><span><strong>Lembab Normal (45–70%)</strong> — Kelembaban optimal</span>';
   }
 }
 
@@ -437,7 +437,7 @@ function initializeChart() {
         },
         {
           // Garis threshold kering
-          label: 'Batas Kering (40%)',
+          label: 'Batas Kering (45%)',
           data: [],
           borderColor: '#dc3545',
           borderDash: [6, 4],
@@ -483,7 +483,7 @@ function updateChart() {
   chart.data.datasets[1].data  = displayData.map(d => d.sensor2);
   chart.data.datasets[2].data  = displayData.map(d => d.moisture);
 
-  // Garis putus-putus threshold 40% sepanjang chart
+  // Garis putus-putus threshold 45% sepanjang chart
   chart.data.datasets[3].data  = displayData.map(() => THRESHOLD_KERING);
 
   chart.update('none');
